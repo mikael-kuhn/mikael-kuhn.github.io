@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Archives: 2016 | Code Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Code Playground">
+<meta property="og:url" content="http://blog.codeplayground.org/archives/2016/index.html">
+<meta property="og:site_name" content="Code Playground">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Code Playground">
+  
+    <link rel="alternative" href="/atom.xml" title="Code Playground" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-3286820-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Code Playground</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Learning something daily</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-Building-a-basic-REST-aspnet-core-example" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/02/Building-a-basic-REST-aspnet-core-example/" class="article-date">
+  <time datetime="2016-12-02T18:48:17.000Z" itemprop="datePublished">Dec 2 2016</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/12/02/Building-a-basic-REST-aspnet-core-example/">Building a basic REST AspNet Core Example - Part 1</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>In this post we will start on an app that exposes a REST web api for an invoice. Disclaimer - It is going to be pretty naive and basic, but I will add to it in further posts (hopefully). So actually we will for now go no higher in <a href="http://martinfowler.com/articles/richardsonMaturityModel.html" target="_blank" rel="external">ricardson’s maturity model</a> than level 2. </p>
+<p>My inspiration for this blog is attending <a href="http://www.skillsmatter.co.uk" target="_blank" rel="external">skillsmatters</a> “Fast-Track to RESTful Microservices” course with Jim Webber. It is highly based on the book <a href="https://www.amazon.com/REST-Practice-Hypermedia-Systems-Architecture/dp/0596805829/ref=sr_1_1?ie=UTF8&amp;qid=1481025806&amp;sr=8-1&amp;keywords=rest+in+practice" target="_blank" rel="external">REST in Practice: Hypermedia and Systems Architecture</a>. Although the book is now old it still contains good information (code examples are naturally outdated) - so read it if you need extensive REST information, but can live with not all is up to date.</p>
+<p>The case here is creating, updating and getting an invoice along the lines of these user stories. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">As a &lt;business user&gt; </div><div class="line">I want &lt;to be able to create an invoice for a customer&gt;</div><div class="line">So that &lt;we can facilitate sales&gt;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">As a &lt;business user&gt; </div><div class="line">I want &lt;to be able to update an invoice&gt;</div><div class="line">So that &lt;it can be created in steps&gt;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">As a &lt;business user&gt; </div><div class="line">I want &lt;to be able to view the invoice&gt;</div><div class="line">So that &lt;I can answer questions related to it&gt;</div></pre></td></tr></table></figure>
+<p>Getting a list of invoices, searching etc is too advanced for now.</p>
+<p>The server code will be .NET core aspnet web api (and for the fun I’m developing on ubuntu with Jetbrains Rider). It will be without a real database backing it for now - since the focus is mostly on the REST part. It does take a pretty naive approach on design of the API, but hopefully I will get to a post where this part is evolved.</p>
+<p>You can find the code discussed at <a href="https://github.com/mikael-kuhn/basic-rest" target="_blank" rel="external">github</a> in the 1_InvoiceApi folder.</p>
+<h2 id="The-Domain"><a href="#The-Domain" class="headerlink" title="The Domain"></a>The Domain</h2><p>We will call our bounded context finance, and the primary class will be the invoice. We will start with this naive definition</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">namespace</span> <span class="title">Finance.Domain.Domain</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Invoice</span></div><div class="line">    &#123;</div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Invoice</span>(<span class="params"><span class="keyword">string</span> id, DateTimeOffset invoiceDate,</span></span></div><div class="line">            DateTimeOffset dueDate,</div><div class="line">            InvoiceCustomer invoiceCustomer,</div><div class="line">            IEnumerable&lt;InvoiceLine&gt; lines)</div><div class="line">        &#123;</div><div class="line">            InvoiceDate = invoiceDate;</div><div class="line">            DueDate = dueDate;</div><div class="line">            Customer = invoiceCustomer;</div><div class="line">            Lines = lines;</div><div class="line">            Id = id;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">public</span> <span class="keyword">string</span> Id &#123; <span class="keyword">get</span>; &#125;</div><div class="line">        <span class="keyword">public</span> DateTimeOffset InvoiceDate &#123; <span class="keyword">get</span>; &#125;</div><div class="line">        <span class="keyword">public</span> DateTimeOffset DueDate &#123; <span class="keyword">get</span>; &#125;</div><div class="line">        <span class="keyword">public</span> InvoiceCustomer Customer &#123; <span class="keyword">get</span>; &#125;</div><div class="line">        <span class="keyword">public</span> IEnumerable&lt;InvoiceLine&gt; Lines &#123; <span class="keyword">get</span>; &#125;</div><div class="line">		<span class="keyword">public</span> Amount SubTotal =&gt; <span class="keyword">new</span> Amount(Lines.Sum(l =&gt; l.Total.Value));</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>The customer and lines are not important for understanding at present time.</p>
+<h2 id="The-repository"><a href="#The-repository" class="headerlink" title="The repository"></a>The repository</h2><p>The invoice is accompanied has an InvoiceReposity class implementing IRepository&lt;Invoice&gt; that looks like this</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">public interface IRepository&lt;T&gt;</div><div class="line">&#123;</div><div class="line">    T Get(string id);</div><div class="line">    void Update(T instance);</div><div class="line">    void Create(T instance);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>for now we have a list of 1000 prepopulated invoices with id 1-1000. The repository is a simple dictionary.</p>
+<h2 id="Looking-for-the-API"><a href="#Looking-for-the-API" class="headerlink" title="Looking for the API"></a>Looking for the API</h2><p>We will center the API around what the business does - that is its domain and the mentioned user stories. With Level 1 in the REST maturity level with introduce resource representations. We use urls to differentiate between these resource representations. So in our case it will be an invoice resource representation. Remember the resource representation does not have to match our domain model. It will be designed from what information we wish to conway, and we may have multiple resource representations for the same domain invoice.</p>
+<p>So since we are going for a CRU(D) implementation here our invoice API can look like this (we choose singularis for the resource name)</p>
+<table>
+<thead>
+<tr>
+<th>Http Verb</th>
+<th>Uri</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td>invoice/{id}</td>
+<td>Get invoice representation</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>invoice</td>
+<td>Create a new invoice</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>invoice/{id}</td>
+<td>Update an existing invoice</td>
+</tr>
+</tbody>
+</table>
+<p>Actually we are already getting a good start on Level 2 Http in the maturity model. We are using the <a href="https://www.w3.org/Protocols/rfc2616/rfc2616.html" target="_blank" rel="external">Http protocol</a> verbs, and we must make sure to use status codes correctly, content types and all the other good stuff (safe verbs and idempotency). Now you could ask where the GET invoice/ is. For now it is not there - remember we had 1000 invoices prepopulated - it will need a little more design.</p>
+<h3 id="Deciding-on-a-media-type"><a href="#Deciding-on-a-media-type" class="headerlink" title="Deciding on a media type"></a>Deciding on a media type</h3><p>We need to chose a <a href="https://en.wikipedia.org/wiki/Media_type" target="_blank" rel="external">media type</a> for the http calls. Since json is “in” at the moment we could choose application/json. However we would like to have something less general purpose to be able to tell the client about the expected processing model (like introduce hypermedia later). So we create a media type in the vendor tree</p>
+<p>application/vnd.restexample.finance+json</p>
+<p>assuming we as the owner are called “restexample”. We also added the application name “finance”, but should probably not break it further down, since it will put demands on the client if we have multiple media types. The suffix +json now tells what the underlying representation is.</p>
+<p>So in order for us to return any information the client must specify the http header</p>
+<p>Accept: application/vnd.restexample.finance+json</p>
+<p>or any variant such as */*, application/*.</p>
+<p>To enforce the media type we add the following to the Startup class. </p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">ConfigureServices</span>(<span class="params">IServiceCollection services</span>)</span></div><div class="line">&#123;</div><div class="line">    services.AddMvc(LimitFormattersToThisApplication);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">LimitFormattersToThisApplication</span>(<span class="params">MvcOptions options</span>)</span></div><div class="line">&#123;</div><div class="line">    options.RespectBrowserAcceptHeader = <span class="literal">true</span>;</div><div class="line">    options.ReturnHttpNotAcceptable = <span class="literal">true</span>;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> customMediaType = <span class="keyword">new</span> MediaTypeHeaderValue(ApiDefinition.ApiMediaType);</div><div class="line"></div><div class="line">    options.SetInputMediaType(customMediaType);</div><div class="line">    options.SetOutputMediaType(customMediaType);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">MvcOptionsExtensions</span></div><div class="line">&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">SetInputMediaType</span>(<span class="params"><span class="keyword">this</span> MvcOptions options, MediaTypeHeaderValue mediaType</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">var</span> supportedInputMediaTypes = options</div><div class="line">            .InputFormatters</div><div class="line">            .OfType&lt;JsonInputFormatter&gt;()</div><div class="line">            .First()</div><div class="line">            .SupportedMediaTypes;</div><div class="line"></div><div class="line">        SetAllowedMediaType(mediaType, supportedInputMediaTypes);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">SetOutputMediaType</span>(<span class="params"><span class="keyword">this</span> MvcOptions options, MediaTypeHeaderValue mediaType</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">var</span> supportedOutputMediaTypes = options</div><div class="line">            .OutputFormatters</div><div class="line">            .OfType&lt;JsonOutputFormatter&gt;()</div><div class="line">            .First()</div><div class="line">            .SupportedMediaTypes;</div><div class="line"></div><div class="line">        SetAllowedMediaType(mediaType, supportedOutputMediaTypes);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">SetAllowedMediaType</span>(<span class="params">MediaTypeHeaderValue mediaType,</span></span></div><div class="line">        MediaTypeCollection supportedInputMediaTypes)</div><div class="line">    &#123;</div><div class="line">        supportedInputMediaTypes.Clear();</div><div class="line">        supportedInputMediaTypes.Add(mediaType);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>The extension methods sets the output and input media type. Note ReturnHttpNotAcceptable is set to true in order to return </p>
+<p>406 Not Acceptable</p>
+<p>when the reponse format requested in the accept header does not match our custom media type.</p>
+<h3 id="Invoice-resource-representation"><a href="#Invoice-resource-representation" class="headerlink" title="Invoice resource representation"></a>Invoice resource representation</h3><h4 id="GET"><a href="#GET" class="headerlink" title="GET"></a>GET</h4><p>For now we will use this invoice representation for GET that matches the domain representation except for some value object representations in the domain (DDD term)</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">	<span class="attr">"id"</span>: <span class="string">"1000"</span>,</div><div class="line">	<span class="attr">"invoiceDate"</span>: <span class="string">"2016-12-05T00:00Z"</span>,</div><div class="line">	<span class="attr">"dueDate"</span>: <span class="string">"2016-12-12T00:00Z"</span>,</div><div class="line">	<span class="attr">"subTotal"</span>: <span class="number">9050</span>,</div><div class="line">	<span class="attr">"customer"</span>: &#123;</div><div class="line">		<span class="attr">"name"</span>: <span class="string">"Microsoft Development Center"</span>,</div><div class="line">		<span class="attr">"addressLines"</span>: [<span class="string">"Kanalvej 8"</span>, <span class="string">"2800 Kongens Lyngby"</span>]</div><div class="line">	&#125;,</div><div class="line">	<span class="attr">"lines"</span>: [</div><div class="line">		&#123; </div><div class="line">			<span class="attr">"lineNumber"</span>: <span class="number">1</span>, </div><div class="line">			<span class="attr">"description"</span>: <span class="string">"consultancy"</span>, </div><div class="line">			<span class="attr">"quantity"</span>: <span class="number">10</span>, </div><div class="line">			<span class="attr">"itemPrice"</span>: <span class="number">905</span>, </div><div class="line">			<span class="attr">"total"</span>: <span class="number">9050</span> </div><div class="line">		&#125;</div><div class="line">	]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>That raises the question of what happens to “total” values on POST or PUT. The answer is we need a different representation without these fields. </p>
+<h4 id="PUT-POST"><a href="#PUT-POST" class="headerlink" title="PUT/POST"></a>PUT/POST</h4><p>Besides removing the total values in the resource representation we also remove the id, ie. we will not let it be up to the client to set it (could be a valid option).</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">	<span class="attr">"invoiceDate"</span>: <span class="string">"2016-12-05T00:00Z"</span>,</div><div class="line">	<span class="attr">"dueDate"</span>: <span class="string">"2016-12-12T00:00Z"</span>,</div><div class="line">	<span class="attr">"customer"</span>: &#123;</div><div class="line">		<span class="attr">"name"</span>: <span class="string">"Microsoft Development Center"</span>,</div><div class="line">		<span class="attr">"addressLines"</span>: [<span class="string">"Kanalvej 8"</span>, <span class="string">"2800 Kongens Lyngby"</span>]</div><div class="line">	&#125;,</div><div class="line">	<span class="attr">"lines"</span>: [</div><div class="line">		&#123; </div><div class="line">			<span class="attr">"lineNumber"</span>: <span class="number">1</span>, </div><div class="line">			<span class="attr">"description"</span>: <span class="string">"consultancy"</span>, </div><div class="line">			<span class="attr">"quantity"</span>: <span class="number">10</span>, </div><div class="line">			<span class="attr">"itemPrice"</span>: <span class="number">905</span></div><div class="line">		&#125;</div><div class="line">	]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="The-Invoice-controller"><a href="#The-Invoice-controller" class="headerlink" title="The Invoice controller"></a>The Invoice controller</h3><p>For now we are not going all in on DDD with a separate application service layer, but rather survive with that code in the controller.</p>
+<h4 id="Get"><a href="#Get" class="headerlink" title="Get"></a>Get</h4><p>So here is the GET implementation</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">[Route(<span class="string">"invoice"</span>)]</div><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">InvoiceController</span> : <span class="title">Controller</span></div><div class="line">&#123;</div><div class="line">...</div><div class="line">    [HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetInvoice"</span>)]</div><div class="line">    <span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">var</span> invoice = invoiceRepository.Get(id);</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (invoice == <span class="literal">null</span>)</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">return</span> NotFound();</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">return</span> Ok(mapper.ToModel(invoice));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    ...</div></pre></td></tr></table></figure>
+<p>We use a literal in the Route attribute to avoid issues with refactoring. If we cannot find the invoice then we return a 404 Not found. Else we return the invoice. It is mapped to this GET model. Notice the HttpGet specifies a Name. This is used in the Post action later.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">GetInvoice</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset InvoiceDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset DueDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> GetInvoiceCustomer Customer &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">decimal</span> SubTotal &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> IEnumerable&lt;GetInvoiceLine&gt; Lines &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">string</span> Id &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>I am sure GetInvoice will cause some discussion for now. You could do without different representations for the Http verb’s, but then that would impact on the validation etc. That is the reason behind the choice here as you will see in a moment on POST.</p>
+<h4 id="POST"><a href="#POST" class="headerlink" title="POST"></a>POST</h4><p>In post we have more to take into account. </p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[HttpPost]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Post</span>(<span class="params">[FromBody] UpdateInvoice updateInvoice</span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">if</span> (updateInvoice == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!ModelState.IsValid)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest(ModelState);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> createdInvoice = invoiceRepository.Create(updateInvoiceMapper.ToDomain(updateInvoice));</div><div class="line"></div><div class="line">    <span class="keyword">return</span> CreatedAtRoute(<span class="string">"GetInvoice"</span>,</div><div class="line">        <span class="keyword">new</span> &#123; id = createdInvoice.Id &#125;,</div><div class="line">        getInvoiceMapper.ToModel(createdInvoice));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>First of all the request could be malformed in such a way that updateInvoice is null. We will return BadRequest then.</p>
+<p>Next is to check if the model is valid. This is one of the reasons for having UpdateInvoice, UpdateInvoiceLine, UpdateInvoiceCustomer models where we decorate with data annotations like shown here</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">UpdateInvoice</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset InvoiceDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset DueDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> UpdateInvoiceCustomer Customer &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> IEnumerable&lt;UpdateInvoiceLine&gt; Lines &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">UpdateInvoiceLine</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">int</span> LineNumber &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">decimal</span> Quantity &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">decimal</span> ItemPrice &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line"></div><div class="line">    [Required(ErrorMessage = <span class="string">"Invoice line description must be specified"</span>)]</div><div class="line">    [MaxLength(<span class="number">500</span>, ErrorMessage = <span class="string">"Invoice line description is too long"</span>)]</div><div class="line">    <span class="keyword">public</span> <span class="keyword">string</span> Description &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>If everything goes well we will return the newly created invoice with a 201 and a Location header for the new resource like shown here</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 201 Created</div><div class="line">Date: Thu, 08 Dec 2016 12:40:35 GMT</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Content-Type: application/vnd.restexample.finance+json; charset=utf-8</div><div class="line">Location: http://localhost:5000/invoice/1002</div><div class="line"></div><div class="line">&#123;</div><div class="line">	&quot;invoiceDate&quot;:&quot;2016-12-05T00:00:00+00:00&quot;,</div><div class="line">	&quot;dueDate&quot;:&quot;2016-12-12T00:00:00+00:00&quot;,</div><div class="line">	&quot;customer&quot;:&#123;</div><div class="line">		&quot;name&quot;:&quot;Microsoft Development Center&quot;,</div><div class="line">		&quot;addressLines&quot;:[&quot;Kanalvej 8&quot;,&quot;2800 Kongens Lyngby&quot;]</div><div class="line">		&#125;,</div><div class="line">	&quot;subTotal&quot;:0.0,</div><div class="line">	&quot;lines&quot;:[</div><div class="line">		&#123;&quot;lineNumber&quot;:1,&quot;description&quot;:&quot;test&quot;,&quot;quantity&quot;:10.0,&quot;itemPrice&quot;:1.0,&quot;total&quot;:10.0&#125;</div><div class="line">	],</div><div class="line">	&quot;id&quot;:&quot;1002&quot;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Note that when calling POST we have to add the headers</p>
+<p>Accept: application/vnd.restexample.finance+json<br>Content-Type: application/vnd.restexample.finance+json</p>
+<p>However the code here in the POST is not pretty when it comes to DRY, but that will be a topic for a later blog.</p>
+<h4 id="PUT"><a href="#PUT" class="headerlink" title="PUT"></a>PUT</h4><p>With Put we wish to update the invoice. We must supply the full payload for updating. We will in a later blog look at the Patch verb.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">[HttpPut(<span class="string">"&#123;id&#125;"</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Put</span>(<span class="params"><span class="keyword">string</span> id, [FromBody] UpdateInvoice updateInvoice</span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">if</span> (updateInvoice == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!ModelState.IsValid)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest(ModelState);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!invoiceRepository.Exists(id))</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> NotFound();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    invoiceRepository.Update(updateInvoiceMapper.ToDomain(updateInvoice, id));</div><div class="line"></div><div class="line">    <span class="keyword">return</span> NoContent();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>The too first validations are simular to Post. Then we check if the invoice exists and return NotFound if not. If we can update then we return NoContent (the client has the invoice already).</p>
+<h2 id="Wrap-up"><a href="#Wrap-up" class="headerlink" title="Wrap-up"></a>Wrap-up</h2><p>That is it for the most basic api for now. But we can do must more as we will see in later posts (hopefully).</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://blog.codeplayground.org/2016/12/02/Building-a-basic-REST-aspnet-core-example/" data-id="ciwgf80mg0000yiaaojz9ylg8" class="article-share-link">Share</a>
+      
+        <a href="http://blog.codeplayground.org/2016/12/02/Building-a-basic-REST-aspnet-core-example/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NET-Core/">.NET Core</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/REST/">REST</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+  
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/NET-Core/" style="font-size: 10px;">.NET Core</a> <a href="/tags/AspNet-Mvc/" style="font-size: 10px;">AspNet Mvc</a> <a href="/tags/Azure/" style="font-size: 10px;">Azure</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/REST/" style="font-size: 10px;">REST</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/12/02/Building-a-basic-REST-aspnet-core-example/">Building a basic REST AspNet Core Example - Part 1</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/04/azure-automation/">Automate VM deployment with Azure + Docker</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/17/idea-behind-this-blog/">Idea behind this blog</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Mikael Kühn<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'codeplayground';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/count.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
