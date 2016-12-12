@@ -66,10 +66,10 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
-    <article id="post-Building-a-basic-REST-aspnet-core-example" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-Building-a-basic-REST-aspnet-core-example-Part-2" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2016/12/02/Building-a-basic-REST-aspnet-core-example/" class="article-date">
-  <time datetime="2016-12-02T18:48:17.000Z" itemprop="datePublished">Dec 2 2016</time>
+    <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" class="article-date">
+  <time datetime="2016-12-09T09:18:40.000Z" itemprop="datePublished">Dec 9 2016</time>
 </a>
     
   </div>
@@ -80,7 +80,72 @@ ga('send', 'pageview');
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2016/12/02/Building-a-basic-REST-aspnet-core-example/">Building a basic REST AspNet Core Example - Part 1</a>
+      <a class="article-title" href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>In the last <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" title="post">post</a> we made the first step at a REST Api. In this post we will improve it by adding HTTP PATCH/OPTIONS support. I’ll repeat the disclamer - It is going to be pretty naive and basic, but I will add to it in future posts (hopefully). This source code for this post is <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/2_Invoice_Api" target="_blank" rel="external">here</a>.</p>
+<h2 id="Adding-HTTP-PATCH-support"><a href="#Adding-HTTP-PATCH-support" class="headerlink" title="Adding HTTP PATCH support"></a>Adding HTTP PATCH support</h2><p>With PUT we have to supply the complete invoice in order to update it. That may not be what you want, so <a href="https://tools.ietf.org/html/rfc5789" target="_blank" rel="external">HTTP PATCH (rfc5789)</a> can help us here by allowing partial resource modification.</p>
+<blockquote>
+<p>The PATCH method requests that a set of changes described in the<br>request entity be applied to the resource identified by the Request-<br>URI.  The set of changes is represented in a format called a “patch<br>document” identified by a media type</p>
+</blockquote>
+<p>For JSON in .NET core this is implemented using <a href="https://tools.ietf.org/html/rfc6902" target="_blank" rel="external">JavaScript Object Notation (JSON) Patch</a>. The media type is “application/json-patch+json”. From Json Patch you can read</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">A JSON Patch document is a JSON [RFC4627] document that represents an</div><div class="line">array of objects.  Each object represents a single operation to be</div><div class="line">applied to the target JSON document.</div><div class="line"></div><div class="line">The following is an example JSON Patch document, transferred in a HTTP PATCH request:</div><div class="line"></div><div class="line">PATCH /my/data HTTP/1.1</div><div class="line">Host: example.org</div><div class="line">Content-Length: 326</div><div class="line">Content-Type: application/json-patch+json</div><div class="line">If-Match: &quot;abc123&quot;</div><div class="line"></div><div class="line">[</div><div class="line"> &#123; &quot;op&quot;: &quot;test&quot;, &quot;path&quot;: &quot;/a/b/c&quot;, &quot;value&quot;: &quot;foo&quot; &#125;,</div><div class="line"> &#123; &quot;op&quot;: &quot;remove&quot;, &quot;path&quot;: &quot;/a/b/c&quot; &#125;,</div><div class="line"> &#123; &quot;op&quot;: &quot;add&quot;, &quot;path&quot;: &quot;/a/b/c&quot;, &quot;value&quot;: [ &quot;foo&quot;, &quot;bar&quot; ] &#125;,</div><div class="line"> &#123; &quot;op&quot;: &quot;replace&quot;, &quot;path&quot;: &quot;/a/b/c&quot;, &quot;value&quot;: 42 &#125;,</div><div class="line"> &#123; &quot;op&quot;: &quot;move&quot;, &quot;from&quot;: &quot;/a/b/c&quot;, &quot;path&quot;: &quot;/a/b/d&quot; &#125;,</div><div class="line"> &#123; &quot;op&quot;: &quot;copy&quot;, &quot;from&quot;: &quot;/a/b/d&quot;, &quot;path&quot;: &quot;/a/b/e&quot; &#125;</div><div class="line">]</div></pre></td></tr></table></figure>
+<p>So { “op”: “replace”, “path”: “/a/b/c”, “value”: 42 } tells us that the operation should replace the target value with 42. The path is a <a href="https://tools.ietf.org/html/rfc6901" target="_blank" rel="external">JSON Pointer</a>. If you want to take a look at the aspnet source code then look <a href="https://github.com/aspnet/JsonPatch" target="_blank" rel="external">here</a>. From the unit test you can also see that the “test” operation is not supported.</p>
+<p>So let us extend our InvoicesController</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">[HttpPatch(<span class="string">"&#123;id&#125;"</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Patch</span>(<span class="params"><span class="keyword">string</span> id, [FromBody] JsonPatchDocument&lt;UpdateInvoice&gt; patchDocument</span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">if</span> (patchDocument == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> invoice = invoiceRepository.Get(id);</div><div class="line">    <span class="keyword">if</span> (invoice == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> NotFound();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> updateInvoice = updateInvoiceMapper.ToModel(invoice);</div><div class="line">    patchDocument.ApplyTo(updateInvoice, ModelState);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!ModelState.IsValid)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest(ModelState);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> updatedDomainInvoice = updateInvoiceMapper.ToDomain(updateInvoice, id);</div><div class="line">    invoiceRepository.Update(updatedDomainInvoice);</div><div class="line"></div><div class="line">    <span class="keyword">return</span> NoContent();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>In the method our input is now JsonPatchDocument<updateinvoice> meaning it is an UpdateInvoice model we perform the operations on. Again we start out with a validation if the input is malformed. Next we handle the case where the invoice is not found. Since we perform the operations against an instance of UpdateInvoice here, then we must construct that instance first from the domain model. So ToModel transforms the loaded entity to our model representation. Then the patch operations are applied using patchDocument.ApplyTo. We also pass in the ModelState so that the validation will still kick in. After ApplyTo we check the ModelState. Last step it to update the invoice using the repository.</updateinvoice></p>
+<h2 id="HTTP-Options"><a href="#HTTP-Options" class="headerlink" title="HTTP Options"></a>HTTP Options</h2><p>To provide a more complete REST Api we can choose to implement the HTTP OPTIONS verb.</p>
+<blockquote>
+<p>The OPTIONS method represents a request for information about the communication options available on the request/response chain identified by the Request-URI. This method allows the client to determine the options and/or requirements associated with a resource, or the capabilities of a server, without implying a resource action or initiating a resource retrieval. </p>
+</blockquote>
+<p>Using it we can determine which other Http Verbs that are available at a given uri. We can use this to eg. remove Http Put/Patch methods when no instance exists. The methods that are available should be specified in the <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.7" target="_blank" rel="external">allow header</a></p>
+<p>Allow: GET, POST, PUT</p>
+<p>So let’s add the first OPTIONS method for the /invoices uri</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[HttpOptions]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Options</span>(<span class="params"></span>)</span></div><div class="line">&#123;</div><div class="line">    Response.Headers.Add(<span class="string">"Allow"</span>, <span class="keyword">string</span>.Join(<span class="string">","</span>, HttpVerbs.Options, HttpVerbs.Post));</div><div class="line">    <span class="keyword">return</span> NoContent();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Now when we make a OPTIONS request we get</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 204 No Content</div><div class="line">Date: Mon, 12 Dec 2016 10:22:07 GMT</div><div class="line">Allow: OPTIONS,POST</div></pre></td></tr></table></figure>
+<p>basically saying all we can do is create a new invoice.</p>
+<p>When we call HTTP OPTIONS on an invoice we should return OPTIONS,GET,PUT,PATCH if the invoice exists. If not then “OPTIONS, GET”. I include GET since it can return a 404 as the response.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[HttpOptions(<span class="string">"&#123;id&#125;"</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">OptionsForInvoice</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">if</span> (!invoiceRepository.Exists(id))</div><div class="line">    &#123;</div><div class="line">        Response.Headers.Add(<span class="string">"Allow"</span>, <span class="keyword">string</span>.Join(<span class="string">","</span>,</div><div class="line">            HttpVerbs.Options,</div><div class="line">            HttpVerbs.Get));</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span></div><div class="line">    &#123;</div><div class="line">        Response.Headers.Add(<span class="string">"Allow"</span>, <span class="keyword">string</span>.Join(<span class="string">","</span>,</div><div class="line">            HttpVerbs.Options,</div><div class="line">            HttpVerbs.Get,</div><div class="line">            HttpVerbs.Put,</div><div class="line">            HttpVerbs.Patch));</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> NoContent();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="Wrap-up"><a href="#Wrap-up" class="headerlink" title="Wrap up"></a>Wrap up</h2><p>That’s it for this time, but we are still not there so other posts will follow.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" data-id="ciwhlasxe0000myaa0v5715sh" class="article-share-link">Share</a>
+      
+        <a href="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NET-Core/">.NET Core</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/REST/">REST</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Building-a-basic-REST-aspnet-core-example" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" class="article-date">
+  <time datetime="2016-12-08T18:48:17.000Z" itemprop="datePublished">Dec 8 2016</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/">Building a basic REST AspNet Core Example - Part 1</a>
     </h1>
   
 
@@ -96,7 +161,7 @@ ga('send', 'pageview');
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">As a &lt;business user&gt; </div><div class="line">I want &lt;to be able to view the invoice&gt;</div><div class="line">So that &lt;I can answer questions related to it&gt;</div></pre></td></tr></table></figure>
 <p>Getting a list of invoices, searching etc is too advanced for now.</p>
 <p>The server code will be .NET core aspnet web api (and for the fun I’m developing on ubuntu with Jetbrains Rider). It will be without a real database backing it for now - since the focus is mostly on the REST part. It does take a pretty naive approach on design of the API, but hopefully I will get to a post where this part is evolved.</p>
-<p>You can find the code discussed at <a href="https://github.com/mikael-kuhn/basic-rest" target="_blank" rel="external">github</a> in the 1_InvoiceApi folder.</p>
+<p>You can find the code discussed at <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/1_Invoice_Api" target="_blank" rel="external">github</a> in the 1_InvoiceApi folder.</p>
 <h2 id="The-Domain"><a href="#The-Domain" class="headerlink" title="The Domain"></a>The Domain</h2><p>We will call our bounded context finance, and the primary class will be the invoice. We will start with this naive definition</p>
 <figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">namespace</span> <span class="title">Finance.Domain.Domain</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Invoice</span></div><div class="line">    &#123;</div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Invoice</span>(<span class="params"><span class="keyword">string</span> id, DateTimeOffset invoiceDate,</span></span></div><div class="line">            DateTimeOffset dueDate,</div><div class="line">            InvoiceCustomer invoiceCustomer,</div><div class="line">            IEnumerable&lt;InvoiceLine&gt; lines)</div><div class="line">        &#123;</div><div class="line">            InvoiceDate = invoiceDate;</div><div class="line">            DueDate = dueDate;</div><div class="line">            Customer = invoiceCustomer;</div><div class="line">            Lines = lines;</div><div class="line">            Id = id;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">public</span> <span class="keyword">string</span> Id &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">        <span class="keyword">public</span> DateTimeOffset InvoiceDate &#123; <span class="keyword">get</span>; &#125;</div><div class="line">        <span class="keyword">public</span> DateTimeOffset DueDate &#123; <span class="keyword">get</span>; &#125;</div><div class="line">        <span class="keyword">public</span> InvoiceCustomer Customer &#123; <span class="keyword">get</span>; &#125;</div><div class="line">        <span class="keyword">public</span> IEnumerable&lt;InvoiceLine&gt; Lines &#123; <span class="keyword">get</span>; &#125;</div><div class="line">		<span class="keyword">public</span> Amount SubTotal =&gt; <span class="keyword">new</span> Amount(Lines.Sum(l =&gt; l.Total.Value));</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>The customer and lines are not important for understanding at present time.</p>
@@ -172,9 +237,9 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2016/12/02/Building-a-basic-REST-aspnet-core-example/" data-id="ciwgf80mg0000yiaaojz9ylg8" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/" data-id="ciwhlasxh0001myaa5tbb2wis" class="article-share-link">Share</a>
       
-        <a href="http://blog.codeplayground.org/2016/12/02/Building-a-basic-REST-aspnet-core-example/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/#disqus_thread" class="article-comment-link">Comments</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NET-Core/">.NET Core</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/REST/">REST</a></li></ul>
@@ -269,7 +334,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2015/03/04/azure-automation/" data-id="ciwgf80ml0002yiaakxo2es94" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2015/03/04/azure-automation/" data-id="ciwhlasxm0004myaace8xw0aw" class="article-share-link">Share</a>
       
         <a href="http://blog.codeplayground.org/2015/03/04/azure-automation/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -311,7 +376,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2015/02/17/idea-behind-this-blog/" data-id="ciwgf80mj0001yiaa8jwsjzq2" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2015/02/17/idea-behind-this-blog/" data-id="ciwhlasxk0003myaan2nntjvv" class="article-share-link">Share</a>
       
         <a href="http://blog.codeplayground.org/2015/02/17/idea-behind-this-blog/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -334,7 +399,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -343,7 +408,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/NET-Core/" style="font-size: 10px;">.NET Core</a> <a href="/tags/AspNet-Mvc/" style="font-size: 10px;">AspNet Mvc</a> <a href="/tags/Azure/" style="font-size: 10px;">Azure</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/REST/" style="font-size: 10px;">REST</a>
+      <a href="/tags/NET-Core/" style="font-size: 20px;">.NET Core</a> <a href="/tags/AspNet-Mvc/" style="font-size: 20px;">AspNet Mvc</a> <a href="/tags/Azure/" style="font-size: 10px;">Azure</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/REST/" style="font-size: 20px;">REST</a>
     </div>
   </div>
 
@@ -352,7 +417,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -364,7 +429,11 @@ ga('send', 'pageview');
       <ul>
         
           <li>
-            <a href="/2016/12/02/Building-a-basic-REST-aspnet-core-example/">Building a basic REST AspNet Core Example - Part 1</a>
+            <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/">Building a basic REST AspNet Core Example - Part 1</a>
           </li>
         
           <li>
