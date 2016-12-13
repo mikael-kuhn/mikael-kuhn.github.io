@@ -11,7 +11,7 @@
 <meta property="og:url" content="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/index.html">
 <meta property="og:site_name" content="Code Playground">
 <meta property="og:description" content="In the last post we made the first step at a REST Api. In this post we will improve it by adding HTTP PATCH/OPTIONS support. I’ll repeat the disclamer - It is going to be pretty naive and basic, but I">
-<meta property="og:updated_time" content="2016-12-12T11:04:00.690Z">
+<meta property="og:updated_time" content="2016-12-12T13:39:49.242Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Building a basic REST AspNet Core Example - Part 2">
 <meta name="twitter:description" content="In the last post we made the first step at a REST Api. In this post we will improve it by adding HTTP PATCH/OPTIONS support. I’ll repeat the disclamer - It is going to be pretty naive and basic, but I">
@@ -90,7 +90,7 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>In the last <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" title="post">post</a> we made the first step at a REST Api. In this post we will improve it by adding HTTP PATCH/OPTIONS support. I’ll repeat the disclamer - It is going to be pretty naive and basic, but I will add to it in future posts (hopefully). This source code for this post is <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/2_Invoice_Api" target="_blank" rel="external">here</a>.</p>
+        <p>In the last <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" title="post">post</a> we made the first step at a REST Api. In this post we will improve it by adding HTTP PATCH/OPTIONS support. I’ll repeat the disclamer - It is going to be pretty naive and basic, but I will add to it in future posts (hopefully). The source code for this post is <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/2_Invoice_Api" target="_blank" rel="external">here</a>.</p>
 <h2 id="Adding-HTTP-PATCH-support"><a href="#Adding-HTTP-PATCH-support" class="headerlink" title="Adding HTTP PATCH support"></a>Adding HTTP PATCH support</h2><p>With PUT we have to supply the complete invoice in order to update it. That may not be what you want, so <a href="https://tools.ietf.org/html/rfc5789" target="_blank" rel="external">HTTP PATCH (rfc5789)</a> can help us here by allowing partial resource modification.</p>
 <blockquote>
 <p>The PATCH method requests that a set of changes described in the<br>request entity be applied to the resource identified by the Request-<br>URI.  The set of changes is represented in a format called a “patch<br>document” identified by a media type</p>
@@ -119,7 +119,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" data-id="ciwhlasxe0000myaa0v5715sh" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" data-id="ciwm1b88i00008taane3f5y0m" class="article-share-link">Share</a>
       
         <a href="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -131,6 +131,15 @@ ga('send', 'pageview');
   
     
 <nav id="article-nav">
+  
+    <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Building a basic REST AspNet Core Example - Part 3 
+        
+      </div>
+    </a>
   
   
     <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" id="article-nav-older" class="article-nav-link-wrap">
@@ -159,7 +168,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">2</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">3</span></li></ul>
     </div>
   </div>
 
@@ -177,7 +186,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -187,6 +196,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/">Building a basic REST AspNet Core Example - Part 3 </a>
+          </li>
         
           <li>
             <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>

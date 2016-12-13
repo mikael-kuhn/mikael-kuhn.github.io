@@ -11,7 +11,7 @@
 <meta property="og:url" content="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/index.html">
 <meta property="og:site_name" content="Code Playground">
 <meta property="og:description" content="In this post we will start on an app that exposes a REST web api for an invoice. Disclaimer - It is going to be pretty naive and basic, but I will add to it in further posts (hopefully). So actually w">
-<meta property="og:updated_time" content="2016-12-09T09:35:27.816Z">
+<meta property="og:updated_time" content="2016-12-13T11:22:57.254Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Building a basic REST AspNet Core Example - Part 1">
 <meta name="twitter:description" content="In this post we will start on an app that exposes a REST web api for an invoice. Disclaimer - It is going to be pretty naive and basic, but I will add to it in further posts (hopefully). So actually w">
@@ -90,7 +90,7 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>In this post we will start on an app that exposes a REST web api for an invoice. Disclaimer - It is going to be pretty naive and basic, but I will add to it in further posts (hopefully). So actually we will for now go no higher in <a href="http://martinfowler.com/articles/richardsonMaturityModel.html" target="_blank" rel="external">ricardson’s maturity model</a> than level 2. </p>
+        <p>In this post we will start on an app that exposes a REST web api for an invoice. Disclaimer - It is going to be pretty naive and basic, but I will add to it in further posts (hopefully). So actually we will for now go no higher in <a href="http://martinfowler.com/articles/richardsonMaturityModel.html" target="_blank" rel="external">richardson’s maturity model</a> than level 2. </p>
 <p>My inspiration for this blog is attending <a href="http://www.skillsmatter.co.uk" target="_blank" rel="external">skillsmatters</a> “Fast-Track to RESTful Microservices” course with Jim Webber. It is highly based on the book <a href="https://www.amazon.com/REST-Practice-Hypermedia-Systems-Architecture/dp/0596805829/ref=sr_1_1?ie=UTF8&amp;qid=1481025806&amp;sr=8-1&amp;keywords=rest+in+practice" target="_blank" rel="external">REST in Practice: Hypermedia and Systems Architecture</a>. Although the book is now old it still contains good information (code examples are naturally outdated) - so read it if you need extensive REST information, but can live with not all is up to date.</p>
 <p>The case here is creating, updating and getting an invoice along the lines of these user stories. </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">As a &lt;business user&gt; </div><div class="line">I want &lt;to be able to create an invoice for a customer&gt;</div><div class="line">So that &lt;we can facilitate sales&gt;</div></pre></td></tr></table></figure>
@@ -106,7 +106,7 @@ ga('send', 'pageview');
 <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">public interface IRepository&lt;T&gt;</div><div class="line">&#123;</div><div class="line">    T Get(string id);</div><div class="line">    void Update(T instance);</div><div class="line">    T Create(T instance);</div><div class="line">    bool Exists(string id);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>for now we have a list of 1000 prepopulated invoices with id 1-1000. The repository is a simple dictionary.</p>
 <h2 id="Looking-for-the-API"><a href="#Looking-for-the-API" class="headerlink" title="Looking for the API"></a>Looking for the API</h2><p>We will center the API around what the business does - that is its domain and the mentioned user stories. With Level 1 in the REST maturity level with introduce resource representations. We use urls to differentiate between these resource representations. So in our case it will be an invoice resource representation. Remember the resource representation does not have to match our domain model. It will be designed from what information we wish to conway, and we may have multiple resource representations for the same domain invoice.</p>
-<p>So since we are going for a CRU(D) implementation here our invoice API can look like this (we choose singularis for the resource name)</p>
+<p>So since we are going for a CRU(D) implementation here our invoice API can look like this</p>
 <table>
 <thead>
 <tr>
@@ -118,17 +118,17 @@ ga('send', 'pageview');
 <tbody>
 <tr>
 <td>GET</td>
-<td>invoice/{id}</td>
+<td>invoices/{id}</td>
 <td>Get invoice representation</td>
 </tr>
 <tr>
 <td>POST</td>
-<td>invoice</td>
+<td>invoices</td>
 <td>Create a new invoice</td>
 </tr>
 <tr>
 <td>PUT</td>
-<td>invoice/{id}</td>
+<td>invoices/{id}</td>
 <td>Update an existing invoice</td>
 </tr>
 </tbody>
@@ -152,7 +152,7 @@ ga('send', 'pageview');
 <figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">	<span class="attr">"invoiceDate"</span>: <span class="string">"2016-12-05T00:00Z"</span>,</div><div class="line">	<span class="attr">"dueDate"</span>: <span class="string">"2016-12-12T00:00Z"</span>,</div><div class="line">	<span class="attr">"customer"</span>: &#123;</div><div class="line">		<span class="attr">"name"</span>: <span class="string">"Microsoft Development Center"</span>,</div><div class="line">		<span class="attr">"addressLines"</span>: [<span class="string">"Kanalvej 8"</span>, <span class="string">"2800 Kongens Lyngby"</span>]</div><div class="line">	&#125;,</div><div class="line">	<span class="attr">"lines"</span>: [</div><div class="line">		&#123; </div><div class="line">			<span class="attr">"lineNumber"</span>: <span class="number">1</span>, </div><div class="line">			<span class="attr">"description"</span>: <span class="string">"consultancy"</span>, </div><div class="line">			<span class="attr">"quantity"</span>: <span class="number">10</span>, </div><div class="line">			<span class="attr">"itemPrice"</span>: <span class="number">905</span></div><div class="line">		&#125;</div><div class="line">	]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <h3 id="The-Invoice-controller"><a href="#The-Invoice-controller" class="headerlink" title="The Invoice controller"></a>The Invoice controller</h3><p>For now we are not going all in on DDD with a separate application service layer, but rather survive with that code in the controller.</p>
 <h4 id="Get"><a href="#Get" class="headerlink" title="Get"></a>Get</h4><p>So here is the GET implementation</p>
-<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">[Route(<span class="string">"invoice"</span>)]</div><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">InvoiceController</span> : <span class="title">Controller</span></div><div class="line">&#123;</div><div class="line">...</div><div class="line">    [HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetInvoice"</span>)]</div><div class="line">    <span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">var</span> invoice = invoiceRepository.Get(id);</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (invoice == <span class="literal">null</span>)</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">return</span> NotFound();</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">return</span> Ok(mapper.ToModel(invoice));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    ...</div></pre></td></tr></table></figure>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">[Route(<span class="string">"invoice"</span>)]</div><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">InvoicesController</span> : <span class="title">Controller</span></div><div class="line">&#123;</div><div class="line">...</div><div class="line">    [HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetInvoice"</span>)]</div><div class="line">    <span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">var</span> invoice = invoiceRepository.Get(id);</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (invoice == <span class="literal">null</span>)</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">return</span> NotFound();</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">return</span> Ok(mapper.ToModel(invoice));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    ...</div></pre></td></tr></table></figure>
 <p>We use a literal in the Route attribute to avoid issues with refactoring. If we cannot find the invoice then we return a 404 Not found. Else we return the invoice. It is mapped to this GET model. Notice the HttpGet specifies a Name. This is used in the Post action later.</p>
 <figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">GetInvoice</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset InvoiceDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset DueDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> GetInvoiceCustomer Customer &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">decimal</span> SubTotal &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> IEnumerable&lt;GetInvoiceLine&gt; Lines &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">string</span> Id &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>I am sure GetInvoice will cause some discussion for now. You could do without different representations for the Http verb’s, but then that would impact on the validation etc. That is the reason behind the choice here as you will see in a moment on POST.</p>
@@ -174,7 +174,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/" data-id="ciwhlasxh0001myaa5tbb2wis" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/" data-id="ciwm1b88r00048taa5lafwqwq" class="article-share-link">Share</a>
       
         <a href="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -223,7 +223,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">2</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">3</span></li></ul>
     </div>
   </div>
 
@@ -241,7 +241,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -251,6 +251,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/">Building a basic REST AspNet Core Example - Part 3 </a>
+          </li>
         
           <li>
             <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>
