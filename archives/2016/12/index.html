@@ -66,6 +66,69 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-Building-a-basic-REST-AspNet-Core-Example-Part-4" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/" class="article-date">
+  <time datetime="2016-12-14T08:48:22.000Z" itemprop="datePublished">Dec 14 2016</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/">Building a basic REST AspNet Core Example - Part 4</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>If you need to catch up on the previous posts then see <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" title="part 1">part 1</a> &amp; <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" title="2">2</a>, <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" title="3">3</a>. The source code for this post is at <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/4_Invoice_Api" target="_blank" rel="external">github</a>.</p>
+<p>Here we are going to take a look at how to tackle the GET /invoices call. I’ll repeat the disclamer - It is going to be pretty naive and basic and I will build on it in further posts (hopefully). We are still at level 2 in <a href="http://martinfowler.com/articles/richardsonMaturityModel.html" target="_blank" rel="external">Richardson’s maturity model</a> and will not take hypermedia in just yet. We will not even reach a full GET implementation in this post.</p>
+<h2 id="GET-invoices-with-HTTP-Prefer-Header"><a href="#GET-invoices-with-HTTP-Prefer-Header" class="headerlink" title="GET invoices/ with HTTP Prefer Header"></a>GET invoices/ with HTTP Prefer Header</h2><p>One of the first things that we will have to think about is what resource representation we want. Now we could say we want to return the complete invoices, or we could say we do not want to return lines. Let’s start with the simplest case. We return a list with the full representation.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">[HttpGet]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"></span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">var</span> invoices = invoiceRepository.GetAll().Select(</div><div class="line">        invoice =&gt; getInvoiceMapper.ToModel(invoice));</div><div class="line"></div><div class="line">    <span class="keyword">return</span> Ok(invoices);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>but in many cases that may not be what our client is interested in. We could probably cut the invoice lines. There are many ways in “the wild”, but here we are going to look at the <a href="https://tools.ietf.org/html/rfc7240" target="_blank" rel="external">HTTP Prefer Header in RFC 7240</a> as a way to tell the server how we prefer the response. To shortly introduce Prefer, the RFC says:</p>
+<blockquote>
+<p>The Prefer request header field is used to indicate that particular server behaviors are preferred by the client but are not required for successful completion of the request.  Prefer is similar in nature to the Expect header field defined by Section 6.1.2 of [RFC7231] with the exception that servers are allowed to ignore stated preferences.</p>
+</blockquote>
+<p>Section 4.2 specifies </p>
+<blockquote>
+<p>The “return=representation” preference indicates that the client prefers that the server include an entity representing the current state of the resource in the response to a successful request.</p>
+<p>The “return=minimal” preference, on the other hand, indicates that the client wishes the server to return only a minimal response to a successful request</p>
+</blockquote>
+<p>which is just what we need here. So we want to be able to handle the following requests:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">GET /invoices HTTP/1.1</div><div class="line">Prefer: return=representation</div><div class="line"></div><div class="line">GET /invoices HTTP/1.1</div><div class="line">Prefer: return=minimal</div></pre></td></tr></table></figure>
+<p>and the response should state which prefer’s we have handled</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Preference-Applied: return=representation</div></pre></td></tr></table></figure>
+<p>You can also take a look at the parameters that IANA keeps a list of <a href="http://www.iana.org/assignments/http-parameters/http-parameters.xhtml" target="_blank" rel="external">here</a>. But actually we are also required to return the <a href="https://tools.ietf.org/html/rfc7231#section-7.1.4" target="_blank" rel="external">Vary Header</a> so that we do not mess up the HTTP infrastructure like shown here</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Date: Wed, 14 Dec 2016 12:08:04 GMT</div><div class="line">Content-Type: application/vnd.restexample.finance+json; charset=utf-8</div><div class="line">Vary: Prefer,Accept,Accept-Encoding</div><div class="line">Preference-Applied: return=representation</div></pre></td></tr></table></figure>
+<p>Here’s the implementation<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">[HttpGet]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"></span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">var</span> preferHeader = Request.Headers.Prefer();</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (SupportedRepresentations.Contains(preferHeader.Return))</div><div class="line">    &#123;</div><div class="line">        Response.Headers.Add(<span class="string">"Preference-Applied"</span>, <span class="string">"return="</span> + preferHeader.Return);</div><div class="line">        Response.Headers.Add(<span class="string">"Vary"</span>, VaryHeaderValue);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> invoices = invoiceRepository.GetAll();</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (preferHeader.Return == ReturnMinimal)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> Ok(invoices.Select(invoice =&gt; getMinimalInvoiceMapper.ToModel(invoice)));</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> Ok(invoices.Select(invoice =&gt; getInvoiceMapper.ToModel(invoice)));</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>We use a helper method to get the prefer header. If the representation asked for can be fullfilled then we return the required headers. If representation=minimal is specified then we return a list of invoices that has a minimal model as specified here</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">GetMinimalInvoice</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset InvoiceDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset DueDate &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> GetInvoiceCustomer Customer &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">decimal</span> SubTotal &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">string</span> Id &#123; <span class="keyword">get</span>; <span class="keyword">set</span>; &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="Wrap-up"><a href="#Wrap-up" class="headerlink" title="Wrap-up"></a>Wrap-up</h2><p>That concludes the first view on the GET invoices/.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://blog.codeplayground.org/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/" data-id="ciwop53bs000047aacjw2mqzs" class="article-share-link">Share</a>
+      
+        <a href="http://blog.codeplayground.org/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NET-Core/">.NET Core</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/REST/">REST</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-Building-a-basic-REST-aspnet-core-example-Part-3" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" class="article-date">
@@ -123,7 +186,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" data-id="ciwm1b88m00018taam2bqkalm" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" data-id="ciwop53bw000147aab3i2p347" class="article-share-link">Share</a>
       
         <a href="http://blog.codeplayground.org/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -188,7 +251,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" data-id="ciwm1b88i00008taane3f5y0m" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" data-id="ciwop53bx000247aaew34jugq" class="article-share-link">Share</a>
       
         <a href="http://blog.codeplayground.org/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -308,7 +371,7 @@ ga('send', 'pageview');
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/" data-id="ciwm1b88r00048taa5lafwqwq" class="article-share-link">Share</a>
+      <a data-url="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/" data-id="ciwop53c4000547aazxa0r911" class="article-share-link">Share</a>
       
         <a href="http://blog.codeplayground.org/2016/12/08/Building-a-basic-REST-aspnet-core-example/#disqus_thread" class="article-comment-link">Comments</a>
       
@@ -333,7 +396,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">3</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">4</span></li></ul>
     </div>
   </div>
 
@@ -351,7 +414,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -361,6 +424,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/">Building a basic REST AspNet Core Example - Part 4</a>
+          </li>
         
           <li>
             <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/">Building a basic REST AspNet Core Example - Part 3 </a>
@@ -376,10 +443,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2015/03/04/azure-automation/">Automate VM deployment with Azure + Docker</a>
-          </li>
-        
-          <li>
-            <a href="/2015/02/17/idea-behind-this-blog/">Idea behind this blog</a>
           </li>
         
       </ul>
