@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Building a basic REST AspNet Core Example - Part 5 | Code Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4. The source code for this post is at github.
+This post will look at HTTP additional features. We will revisit the case of wh">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Building a basic REST AspNet Core Example - Part 5">
+<meta property="og:url" content="http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/index.html">
+<meta property="og:site_name" content="Code Playground">
+<meta property="og:description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4. The source code for this post is at github.
+This post will look at HTTP additional features. We will revisit the case of wh">
+<meta property="og:updated_time" content="2016-12-15T13:01:53.839Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Building a basic REST AspNet Core Example - Part 5">
+<meta name="twitter:description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4. The source code for this post is at github.
+This post will look at HTTP additional features. We will revisit the case of wh">
+  
+    <link rel="alternative" href="/atom.xml" title="Code Playground" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-3286820-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Code Playground</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Learning something daily</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Building-a-basic-REST-AspNet-Core-Example-Part-5" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/" class="article-date">
+  <time datetime="2016-12-15T09:31:41.000Z" itemprop="datePublished">Dec 15 2016</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Building a basic REST AspNet Core Example - Part 5
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>If you need to catch up on the previous posts then see <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" title="part 1">part 1</a> &amp; <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" title="2">2</a>, <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" title="3">3</a>, <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/" title="4">4</a>. The source code for this post is at <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/5_Invoice_Api" target="_blank" rel="external">github</a>.</p>
+<p>This post will look at HTTP additional features. We will revisit the case of when a resource was modified. We looked at ETag previously. In this post we will tackle the case where we want to go with a date for comparison instead. This should be done if generation of an ETag does not make sense for you.</p>
+<h2 id="Last-Modified-If-Modified-Since-If-Unmodified-Since"><a href="#Last-Modified-If-Modified-Since-If-Unmodified-Since" class="headerlink" title="Last-Modified, If-Modified-Since, If-Unmodified-Since"></a>Last-Modified, If-Modified-Since, If-Unmodified-Since</h2><p>When we looked at ETag in the InvoiceController we did not provide a Last-Modified response header. In the case of an invoice we would probably in real life also keep track of modification and thus we should provide this header according to <a href="https://tools.ietf.org/html/rfc7232#section-2.4" target="_blank" rel="external">RFC 7232</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">200 (OK) responses to GET or HEAD, an origin server:</div><div class="line"></div><div class="line">   o  SHOULD send an entity-tag validator unless it is not feasible to</div><div class="line">      generate one.</div><div class="line">... </div><div class="line">   o  SHOULD send a Last-Modified value if it is feasible to send one.</div></pre></td></tr></table></figure>
+<p>Here we will look at a limited FilesController where files can be uploaded, and retrieved. I will just make enough code to highlight the HTTP features. We will add a simplified File class to the domain</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">File</span></div><div class="line">&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">File</span>(<span class="params"><span class="keyword">byte</span>[] content, DateTimeOffset lastModified, <span class="keyword">string</span> contentType</span>)</span></div><div class="line">    &#123;</div><div class="line">        Content = content;</div><div class="line">        LastModified = lastModified;</div><div class="line">        ContentType = contentType;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">byte</span>[] Content &#123; <span class="keyword">get</span>; &#125;</div><div class="line">    <span class="keyword">public</span> DateTimeOffset LastModified &#123; <span class="keyword">get</span>; &#125;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">string</span> ContentType &#123; <span class="keyword">get</span>; &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>and provide a FileRepository for it (not shown here). Now we could make a simple GET implementation like this that return the LastModified header</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">[Route(<span class="string">"files"</span>)]</div><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">FilesController</span> : <span class="title">Controller</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IRepository&lt;File&gt; fileRepository;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FilesController</span>(<span class="params">IRepository&lt;File&gt; fileRepository</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">this</span>.fileRepository = fileRepository;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    [HttpGet(<span class="string">"&#123;id&#125;"</span>)]</div><div class="line">    <span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">var</span> file = fileRepository.Get(id);</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (file == <span class="literal">null</span>)</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">return</span> NotFound();</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">var</span> responseHeaders = Response.GetTypedHeaders();</div><div class="line">        responseHeaders.LastModified = file.LastModified;</div><div class="line"></div><div class="line">        <span class="keyword">return</span> File(file.Content, file.ContentType);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Let’s extend this to handle If-Modified-Since.</p>
+<h2 id="If-Modified-Since"><a href="#If-Modified-Since" class="headerlink" title="If-Modified-Since"></a>If-Modified-Since</h2><p>We have to live up to the following in <a href="https://tools.ietf.org/html/rfc7232#section-3.3" target="_blank" rel="external">RFC 7232 section 3.3</a>:</p>
+<blockquote>
+<p>A recipient MUST ignore If-Modified-Since if the request contains an If-None-Match header field;<br>A recipient MUST ignore the If-Modified-Since header field if the received field-value is not a valid HTTP-date, or if the request method is neither GET nor HEAD.</p>
+</blockquote>
+<p>This can be fullfilled by this implementation<br><figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">[HttpGet(<span class="string">"&#123;id&#125;"</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">var</span> file = fileRepository.Get(id);</div><div class="line"></div><div class="line"></div><div class="line">    <span class="keyword">if</span> (file == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> NotFound();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> requestHeaders = Request.GetTypedHeaders();</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (requestHeaders.IfNoneMatch == <span class="literal">null</span> &amp;&amp;</div><div class="line">        requestHeaders.IfModifiedSince.HasValue</div><div class="line">        &amp;&amp; requestHeaders.IfModifiedSince.Value &gt;= file.LastModified)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> StatusCode(StatusCodes.Status304NotModified);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> responseHeaders = Response.GetTypedHeaders();</div><div class="line">    responseHeaders.LastModified = file.LastModified;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> File(file.Content, file.ContentType);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h2 id="If-Unmodified-Since"><a href="#If-Unmodified-Since" class="headerlink" title="If-Unmodified-Since"></a>If-Unmodified-Since</h2><p>You can find the description for the If-Modified-Since header in <a href="https://tools.ietf.org/html/rfc7232#section-3.4" target="_blank" rel="external">RFC 7232 section 3.4</a>. The use case is as the standard says:</p>
+<blockquote>
+<p>If-Unmodified-Since is most often used with state-changing methods (e.g., POST, PUT, DELETE) to prevent accidental overwrites when multiple user agents might be acting in parallel on a resource that does not supply entity-tags with its representations</p>
+</blockquote>
+<p>Our example will be the DELETE method.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line">[HttpDelete(<span class="string">"&#123;id&#125;"</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Delete</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">if</span> (!fileRepository.Exists(id))</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> NotFound();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// Yeah this you would never do in real life</span></div><div class="line">    <span class="keyword">var</span> file = fileRepository.Get(id);</div><div class="line"></div><div class="line">    <span class="keyword">var</span> requestHeaders = Request.GetTypedHeaders();</div><div class="line">    <span class="keyword">if</span> (requestHeaders.IfMatch != <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">if</span> (!requestHeaders.IfMatch.All(match =&gt; match.Equals(EntityTagHeaderValue.Any)))</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">return</span> StatusCode(StatusCodes.Status412PreconditionFailed);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">if</span> (requestHeaders.IfUnmodifiedSince.HasValue</div><div class="line">            &amp;&amp; requestHeaders.IfUnmodifiedSince.Value &lt; file.LastModified)</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">return</span> StatusCode(StatusCodes.Status412PreconditionFailed);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    fileRepository.Delete(id);</div><div class="line">    <span class="keyword">return</span> NoContent();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="Wrap-up"><a href="#Wrap-up" class="headerlink" title="Wrap-up"></a>Wrap-up</h2><p>So we have now seen how Last-Modified, If-Modified-Since, If-Unmodified-Since headers can work. Next up is more HTTP features.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/" data-id="ciwq64u540001ocaagmwf9k24" class="article-share-link">Share</a>
+      
+        <a href="http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NET-Core/">.NET Core</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/REST/">REST</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Building a basic REST AspNet Core Example - Part 4</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/NET-Core/" style="font-size: 20px;">.NET Core</a> <a href="/tags/AspNet-Mvc/" style="font-size: 20px;">AspNet Mvc</a> <a href="/tags/Azure/" style="font-size: 10px;">Azure</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/REST/" style="font-size: 20px;">REST</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/">Building a basic REST AspNet Core Example - Part 5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/">Building a basic REST AspNet Core Example - Part 4</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/">Building a basic REST AspNet Core Example - Part 3 </a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/">Building a basic REST AspNet Core Example - Part 1</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Mikael Kühn<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'codeplayground';
+  
+  var disqus_url = 'http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
