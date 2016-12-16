@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Building a basic REST AspNet Core Example - Part 6 | Code Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4, 5. The source code for this post is at github.
+In this post I will look at additional HTTP features. That is HTTP status 20">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Building a basic REST AspNet Core Example - Part 6">
+<meta property="og:url" content="http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/index.html">
+<meta property="og:site_name" content="Code Playground">
+<meta property="og:description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4, 5. The source code for this post is at github.
+In this post I will look at additional HTTP features. That is HTTP status 20">
+<meta property="og:updated_time" content="2016-12-16T10:18:24.356Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Building a basic REST AspNet Core Example - Part 6">
+<meta name="twitter:description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4, 5. The source code for this post is at github.
+In this post I will look at additional HTTP features. That is HTTP status 20">
+  
+    <link rel="alternative" href="/atom.xml" title="Code Playground" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-89020543-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Code Playground</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">Learning something daily</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Building-a-basic-REST-AspNet-Core-Example-Part-6" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/" class="article-date">
+  <time datetime="2016-12-15T15:00:19.000Z" itemprop="datePublished">Dec 15 2016</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Building a basic REST AspNet Core Example - Part 6
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>If you need to catch up on the previous posts then see <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" title="part 1">part 1</a> &amp; <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" title="2">2</a>, <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" title="3">3</a>, <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/" title="4">4</a>, <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/" title="5">5</a>. The source code for this post is at <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/6_Invoice_Api" target="_blank" rel="external">github</a>.</p>
+<p>In this post I will look at additional HTTP features. That is HTTP status 202 Accepted and the Retry-After header and see how this can be used with our FileController created in the last <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/" title="post">post</a>.</p>
+<h2 id="HTTP-Status-202-Accepted"><a href="#HTTP-Status-202-Accepted" class="headerlink" title="HTTP Status 202 Accepted"></a>HTTP Status 202 Accepted</h2><p>You can read about 202 Accepted in <a href="https://tools.ietf.org/html/rfc7231#section-6.3.3" target="_blank" rel="external">in RFC 7231 section 6.3.3</a>.</p>
+<blockquote>
+<p>The 202 (Accepted) status code indicates that the request has been accepted for processing, but the processing has not been completed. The request might or might not eventually be acted upon, as it might be disallowed when processing actually takes place.</p>
+</blockquote>
+<p>This status code fits well with adding a new file using POST. We could perform a virus scan or do other custom processing before it becomes available. At the time of writing this block AcceptedAtRoute response is only added to the DEV branch of AspNet. So we will do a hack adding it to our solution. Likewise IFormCollection is in a newer version than shown here. So here’s the implementation.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[HttpPost]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Post</span>(<span class="params"></span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">var</span> file = Request.Form.Files.FirstOrDefault();</div><div class="line">    <span class="keyword">if</span> (file == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    File newFile;</div><div class="line">    <span class="keyword">using</span> (<span class="keyword">var</span> stream = <span class="keyword">new</span> MemoryStream())</div><div class="line">    &#123;</div><div class="line">        file.CopyTo(stream);</div><div class="line">        newFile = <span class="keyword">new</span> File(stream.ToArray(), DateTimeOffset.Now, file.ContentType);</div><div class="line">        fileRepository.Create(newFile);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> AcceptedAtRouteResult(<span class="string">"GetFile"</span>, <span class="keyword">new</span> &#123; id = newFile.Id&#125;, <span class="literal">null</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>You should imagine that fileRepository.Create spins off eg. a virus check.</p>
+<h2 id="Retry-After-Header"><a href="#Retry-After-Header" class="headerlink" title="Retry-After Header"></a>Retry-After Header</h2><p>You can read about the Retry-After header <a href="https://tools.ietf.org/html/rfc7231#section-7.1.3" target="_blank" rel="external">in RFC 7231 section 7.1.3</a></p>
+<blockquote>
+<p>Servers send the “Retry-After” header field to indicate how long the user agent ought to wait before making a follow-up request.  When sent with a 503 (Service Unavailable) response, Retry-After indicates how long the service is expected to be unavailable to the client.</p>
+</blockquote>
+<p>Here we are going to use Retry-After in another way. That is with the GET request that we pointed to with the AcceptedAtRouteResult. I can imagine this behaviour is debateable, so don’t go do it without considering the consequences. But in this case when then file isn’t available yet we will return No Content status along with the Retry-After header.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">var</span> file = fileRepository.Get(id);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (file == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> NotFound();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> requestHeaders = Request.GetTypedHeaders();</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (requestHeaders.IfNoneMatch == <span class="literal">null</span> &amp;&amp;</div><div class="line">        requestHeaders.IfModifiedSince.HasValue</div><div class="line">        &amp;&amp; requestHeaders.IfModifiedSince.Value &gt;= file.LastModified)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> StatusCode(StatusCodes.Status304NotModified);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!file.IsAvailable)</div><div class="line">    &#123;</div><div class="line">        Response.Headers.Add(HeaderNames.RetryAfter, <span class="string">"60"</span>);</div><div class="line">        <span class="keyword">return</span> NoContent();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">var</span> responseHeaders = Response.GetTypedHeaders();</div><div class="line">    responseHeaders.LastModified = file.LastModified;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> File(file.Content, file.ContentType);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>I have introduced a property IsAvailable on the File class to determine if a No Content along with a Retry-After header should be returned. Now when we make the request to a newly upload file we get:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 204 No Content</div><div class="line">Date: Fri, 16 Dec 2016 10:08:26 GMT</div><div class="line">Retry-After: 60</div><div class="line">Server: Kestrel</div></pre></td></tr></table></figure>
+<p>that says we should retry after 60 seconds.</p>
+<h2 id="Wrap-up"><a href="#Wrap-up" class="headerlink" title="Wrap-up"></a>Wrap-up</h2><p>That’s it for now. But the REST story will continue in other posts.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/" data-id="ciwqhxb41000386aaytsz9e8o" class="article-share-link">Share</a>
+      
+        <a href="http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NET-Core/">.NET Core</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/REST/">REST</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Building a basic REST AspNet Core Example - Part 5</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">6</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/NET-Core/" style="font-size: 20px;">.NET Core</a> <a href="/tags/AspNet-Mvc/" style="font-size: 20px;">AspNet Mvc</a> <a href="/tags/Azure/" style="font-size: 10px;">Azure</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/REST/" style="font-size: 20px;">REST</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/">Building a basic REST AspNet Core Example - Part 6</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/">Building a basic REST AspNet Core Example - Part 5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/">Building a basic REST AspNet Core Example - Part 4</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/">Building a basic REST AspNet Core Example - Part 3 </a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Mikael Kühn<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'codeplayground';
+  
+  var disqus_url = 'http://blog.codeplayground.org/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
