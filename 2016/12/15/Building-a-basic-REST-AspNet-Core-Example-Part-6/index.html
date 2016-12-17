@@ -13,7 +13,7 @@ In this post I will look at additional HTTP features. That is HTTP status 20">
 <meta property="og:site_name" content="Code Playground">
 <meta property="og:description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4, 5. The source code for this post is at github.
 In this post I will look at additional HTTP features. That is HTTP status 20">
-<meta property="og:updated_time" content="2016-12-16T10:18:24.356Z">
+<meta property="og:updated_time" content="2016-12-17T13:52:20.483Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Building a basic REST AspNet Core Example - Part 6">
 <meta name="twitter:description" content="If you need to catch up on the previous posts then see part 1 &amp;amp; 2, 3, 4, 5. The source code for this post is at github.
@@ -99,7 +99,7 @@ ga('send', 'pageview');
 <blockquote>
 <p>The 202 (Accepted) status code indicates that the request has been accepted for processing, but the processing has not been completed. The request might or might not eventually be acted upon, as it might be disallowed when processing actually takes place.</p>
 </blockquote>
-<p>This status code fits well with adding a new file using POST. We could perform a virus scan or do other custom processing before it becomes available. At the time of writing this block AcceptedAtRoute response is only added to the DEV branch of AspNet. So we will do a hack adding it to our solution. Likewise IFormCollection is in a newer version than shown here. So here’s the implementation.</p>
+<p>This status code fits well with adding a new file using POST. We could perform a virus scan or do other custom processing before it becomes available. At the time of writing this post AcceptedAtRoute response is only added to the DEV branch of AspNet at GitHub. So we will do a hack adding it to our solution. Likewise IFormCollection is in a newer version than shown here. So here’s the implementation.</p>
 <figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[HttpPost]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Post</span>(<span class="params"></span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">var</span> file = Request.Form.Files.FirstOrDefault();</div><div class="line">    <span class="keyword">if</span> (file == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    File newFile;</div><div class="line">    <span class="keyword">using</span> (<span class="keyword">var</span> stream = <span class="keyword">new</span> MemoryStream())</div><div class="line">    &#123;</div><div class="line">        file.CopyTo(stream);</div><div class="line">        newFile = <span class="keyword">new</span> File(stream.ToArray(), DateTimeOffset.Now, file.ContentType);</div><div class="line">        fileRepository.Create(newFile);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> AcceptedAtRouteResult(<span class="string">"GetFile"</span>, <span class="keyword">new</span> &#123; id = newFile.Id&#125;, <span class="literal">null</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>You should imagine that fileRepository.Create spins off eg. a virus check.</p>
 <h2 id="Retry-After-Header"><a href="#Retry-After-Header" class="headerlink" title="Retry-After Header"></a>Retry-After Header</h2><p>You can read about the Retry-After header <a href="https://tools.ietf.org/html/rfc7231#section-7.1.3" target="_blank" rel="external">in RFC 7231 section 7.1.3</a></p>
@@ -129,6 +129,15 @@ ga('send', 'pageview');
     
 <nav id="article-nav">
   
+    <a href="/2016/12/16/Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Building a basic REST AspNet Core Example: Caching - Part 7
+        
+      </div>
+    </a>
+  
   
     <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
@@ -156,7 +165,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">6</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -174,7 +183,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -184,6 +193,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2016/12/16/Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7/">Building a basic REST AspNet Core Example: Caching - Part 7</a>
+          </li>
         
           <li>
             <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/">Building a basic REST AspNet Core Example - Part 6</a>
@@ -199,10 +212,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/">Building a basic REST AspNet Core Example - Part 3 </a>
-          </li>
-        
-          <li>
-            <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>
           </li>
         
       </ul>

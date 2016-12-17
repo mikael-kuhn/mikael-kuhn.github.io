@@ -66,6 +66,121 @@ ga('send', 'pageview');
       <div class="outer">
         <section id="main">
   
+    <article id="post-Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/16/Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7/" class="article-date">
+  <time datetime="2016-12-16T13:12:43.000Z" itemprop="datePublished">Dec 16 2016</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/12/16/Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7/">Building a basic REST AspNet Core Example: Caching - Part 7</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>If you need to catch up on the previous posts then see <a href="/2016/12/08/Building-a-basic-REST-aspnet-core-example/" title="part 1">part 1</a> &amp; <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/" title="2">2</a>, <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/" title="3">3</a>, <a href="/2016/12/14/Building-a-basic-REST-AspNet-Core-Example-Part-4/" title="4">4</a>, <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-5/" title="5">5</a>, <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/" title="6">6</a>. The source code for this post is at <a href="https://github.com/mikael-kuhn/basic-rest/tree/master/7_Invoice_Api" target="_blank" rel="external">github</a>.</p>
+<p>This post will take a look at <a href="https://tools.ietf.org/html/rfc7234" target="_blank" rel="external">RFC 7234</a> which is about HTTP 1.1 caching. It is mainly about two headers Expires and Cache-Control. The first one is for server responses. The second one can be used both on requests and responses. Cache-Control has the highest precedence. If your API returns a GET (safe method) with a 200 response then it can be subject to caching. If you don’t specify anything in your GET response the cache may assign a heuristic expiration time. Other status codes where this can <a href="https://tools.ietf.org/html/rfc7231#section-6.1" target="_blank" rel="external">happen is</a></p>
+<blockquote>
+<p>Responses with status codes that are defined as cacheable by default (e.g., 200, 203, 204, 206, 300, 301, 404, 405, 410, 414, and 501 in this specification) can be reused by a cache with heuristic expiration unless otherwise indicated by the method definition or explicit cache controls [RFC7234]; all other status codes are not cacheable by default.</p>
+</blockquote>
+<p>If you specify Last-Modified or ETag these are taken into account.</p>
+<h2 id="Expires-Header"><a href="#Expires-Header" class="headerlink" title="Expires Header"></a>Expires Header</h2><p>You can read about the <a href="https://tools.ietf.org/html/rfc7234#section-5.3" target="_blank" rel="external">Expires header here</a>. Basically it allows you to specify a date after which the response is considered stale. Like this</p>
+<p>Expires: Fri, 16 Dec 2016 16:00:00 GMT</p>
+<h2 id="Cache-Control-Header"><a href="#Cache-Control-Header" class="headerlink" title="Cache-Control Header"></a>Cache-Control Header</h2><p>You can read about the <a href="https://tools.ietf.org/html/rfc7234#section-5.2" target="_blank" rel="external">Cache-Control header here</a>. The directives you can use depends on if we are talking about the request or the response. So let’s shortly look at some of these</p>
+<h3 id="Request-Cache-Control-Directives"><a href="#Request-Cache-Control-Directives" class="headerlink" title="Request Cache-Control Directives"></a>Request Cache-Control Directives</h3><ul>
+<li><p>no-cache - Specify this directive if the client is not willing to get a cached response.</p>
+</li>
+<li><p>max-age - Specifying Cache-Control: max-age=5, means that the client is willing to accept a response that is up to 5 seconds old.</p>
+</li>
+<li><p>max-stale - Here the client is willing to accept a stale result, eg Cache-Control: max-stale=5.</p>
+</li>
+<li><p>min-fresh - Here you say that you want a result that will be fresh for at least the time specified.</p>
+</li>
+<li><p>no-transform - Says no intermediary may transform the payload.</p>
+</li>
+<li><p>only-if-cached - Can be used to explicitly go for a cached response. If not in the cache you will get a 504 (Gateway timeout).</p>
+</li>
+</ul>
+<h3 id="Response-Cache-Control-Directives"><a href="#Response-Cache-Control-Directives" class="headerlink" title="Response Cache-Control Directives"></a>Response Cache-Control Directives</h3><p>Some of the response directives are</p>
+<ul>
+<li><p>must-revalidate - Says that when the response is stale the cache must not use the response without successfull validation on the origin server. If it cannot reach the origin server it will return 504 (Gateway Timeout).</p>
+</li>
+<li><p>no-cache - Says that the response may not be stored without validating the subsequent requests.</p>
+</li>
+<li><p>no-store - Says that the response must not be stored in the cache.</p>
+</li>
+<li><p>public - Says that the response may be stored in either a shared or private (local) cache.</p>
+</li>
+<li><p>private - Says that the response may be stored in the user’s cache</p>
+</li>
+<li><p>max-age - Says that the response is stale after the specified number of seconds.</p>
+</li>
+<li><p>s-maxage - Says that the response is stale in a shared cache after the specified number of seconds.</p>
+</li>
+</ul>
+<h2 id="Using-Caching"><a href="#Using-Caching" class="headerlink" title="Using Caching"></a>Using Caching</h2><p>You should use caching to provide scalability and decrease the load on your server. In the previous posts we made a FileController that can return files. This could potentially put a load on server we may want to minimize. You can read more about caching with aspnet core <a href="https://docs.microsoft.com/en-us/aspnet/core/performance/caching/response" target="_blank" rel="external">here</a>. Basically we just have to use the ResponseCacheAttribute. Let’s try it out with curl and Nginx (or whatever your preferred tool might be). Here I’ve put nginx in front of the aspnet core app running on port 5000. So when hitting 8080 nginx will be the cache intermediate.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">http &#123;</div><div class="line">	proxy_cache_path /home/mikael/nginx-cache levels=1:2 keys_zone=my_cache:10m max_size=10g</div><div class="line">             inactive=60m use_temp_path=off;</div><div class="line"></div><div class="line">	server &#123;</div><div class="line">		listen	8080;</div><div class="line">		location / &#123;</div><div class="line">			proxy_cache my_cache;</div><div class="line">    		proxy_pass http://127.0.0.1:5000/;</div><div class="line">    		add_header X-Cache-Status $upstream_cache_status;</div><div class="line">		&#125;</div><div class="line"></div><div class="line">	&#125;</div></pre></td></tr></table></figure>
+<p>Let’s try to get a file without any cache response header using </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">curl -I -X GET  http://localhost:8080/files/1</div><div class="line"></div><div class="line">HTTP/1.1 200 OK</div><div class="line">Server: nginx/1.10.0 (Ubuntu)</div><div class="line">Date: Sat, 17 Dec 2016 15:18:11 GMT</div><div class="line">Content-Type: text/plain</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Connection: keep-alive</div><div class="line">Last-Modified: Sat, 10 Dec 2016 00:00:00 GMT</div><div class="line">X-Cache-Status: MISS</div><div class="line">```</div></pre></td></tr></table></figure>
+<p>Notice the X-Cache-Status saying it is a cache MISS. Repeating the command will give the same result. In principle it could have stored it according to the RFC. Let’s try to add the attribute as shown here</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">[Route(<span class="string">"files"</span>)]</div><div class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">FilesController</span> : <span class="title">Controller</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IRepository&lt;File&gt; fileRepository;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FilesController</span>(<span class="params">IRepository&lt;File&gt; fileRepository</span>)</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">this</span>.fileRepository = fileRepository;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    [HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetFile"</span>)]</div><div class="line">    [ResponseCache(Duration = <span class="number">60</span>)]</div><div class="line">    <span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div><div class="line">    &#123;</div></pre></td></tr></table></figure>
+<p>We get the following response.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Server: nginx/1.10.0 (Ubuntu)</div><div class="line">Date: Sat, 17 Dec 2016 15:24:02 GMT</div><div class="line">Content-Type: text/plain</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Connection: keep-alive</div><div class="line">Cache-Control: public,max-age=60</div><div class="line">Last-Modified: Sat, 10 Dec 2016 00:00:00 GMT</div><div class="line">X-Cache-Status: MISS</div></pre></td></tr></table></figure>
+<p>Saying that the response can be cached for 60 seconds in private + shared caches. Retrying it within the time limit and we get X-Cache-Status: HIT. After the 60 seconds we can see nginx makes a new request and returns X-Cache-Status: EXPIRED (make one more request and it will give a HIT).</p>
+<p>Now let’s specify that only the client may cache the result.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetFile"</span>)]</div><div class="line">[ResponseCache(Duration = <span class="number">60</span>, Location=ResponseCacheLocation.Client)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div></pre></td></tr></table></figure>
+<p>Now we will always get</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Server: nginx/1.10.0 (Ubuntu)</div><div class="line">Date: Sat, 17 Dec 2016 15:33:44 GMT</div><div class="line">Content-Type: text/plain</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Connection: keep-alive</div><div class="line">Cache-Control: private,max-age=60</div><div class="line">Last-Modified: Sat, 10 Dec 2016 00:00:00 GMT</div><div class="line">X-Cache-Status: EXPIRED</div></pre></td></tr></table></figure>
+<p>or rather MISS as X-Cache-Status but the cache already has the entry from before. If we specify ResponseCacheLocation.None like below we must also specify the Duration</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetFile"</span>)]</div><div class="line">[ResponseCache(Location = ResponseCacheLocation.None, Duration = <span class="number">60</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Server: nginx/1.10.0 (Ubuntu)</div><div class="line">Date: Sat, 17 Dec 2016 15:42:59 GMT</div><div class="line">Content-Type: text/plain</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Connection: keep-alive</div><div class="line">Cache-Control: no-cache,max-age=60</div><div class="line">Pragma: no-cache</div><div class="line">Last-Modified: Sat, 10 Dec 2016 00:00:00 GMT</div><div class="line">X-Cache-Status: EXPIRED</div></pre></td></tr></table></figure>
+<p>If we do not want the result cached at all we can do it like this</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetFile"</span>)]</div><div class="line">[ResponseCache(NoStore = <span class="literal">true</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div></pre></td></tr></table></figure>
+<p>and then we get</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Server: nginx/1.10.0 (Ubuntu)</div><div class="line">Date: Sat, 17 Dec 2016 15:46:43 GMT</div><div class="line">Content-Type: text/plain</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Connection: keep-alive</div><div class="line">Cache-Control: no-store</div><div class="line">Last-Modified: Sat, 10 Dec 2016 00:00:00 GMT</div><div class="line">X-Cache-Status: EXPIRED</div></pre></td></tr></table></figure>
+<p>The VARY header is also supported</p>
+<p>[ResponseCache(Location = ResponseCacheLocation.Any, Duration = 60, VaryByHeader = “Accept-Encoding”)]</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Server: nginx/1.10.0 (Ubuntu)</div><div class="line">Date: Sat, 17 Dec 2016 15:59:08 GMT</div><div class="line">Content-Type: text/plain</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Connection: keep-alive</div><div class="line">Cache-Control: public,max-age=60</div><div class="line">Last-Modified: Sat, 10 Dec 2016 00:00:00 GMT</div><div class="line">Vary: Accept-Encoding</div><div class="line">X-Cache-Status: HIT</div></pre></td></tr></table></figure>
+<h2 id="Using-Cache-Profiles"><a href="#Using-Cache-Profiles" class="headerlink" title="Using Cache Profiles"></a>Using Cache Profiles</h2><p>You probably don’t want to duplicate this attribute settings on many controllers. So instead you can define a profile in ConfigureServices in Startup.cs like shown here</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">ConfigureServices</span>(<span class="params">IServiceCollection services</span>)</span></div><div class="line">&#123;</div><div class="line">	services.AddMvc(options =&gt;</div><div class="line">	&#123;</div><div class="line">	    options.CacheProfiles.Add(<span class="string">"Default"</span>, <span class="keyword">new</span> CacheProfile()</div><div class="line">	    &#123;</div><div class="line">	        Duration = <span class="number">60</span>,</div><div class="line">	        Location = ResponseCacheLocation.Client</div><div class="line">	    &#125;);</div><div class="line">	    LimitFormattersToThisApplication(options);</div><div class="line">	&#125;);</div><div class="line">...</div></pre></td></tr></table></figure>
+<p>in the FilesController we can then change the attribute to</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[HttpGet(<span class="string">"&#123;id&#125;"</span>, Name = <span class="string">"GetFile"</span>)]</div><div class="line">[ResponseCache(CacheProfileName =  <span class="string">"Default"</span>)]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Get</span>(<span class="params"><span class="keyword">string</span> id</span>)</span></div></pre></td></tr></table></figure>
+<h2 id="If-you-don’t-want-attributes-or-profiles"><a href="#If-you-don’t-want-attributes-or-profiles" class="headerlink" title="If you don’t want attributes or profiles"></a>If you don’t want attributes or profiles</h2><p>In this case then you can do everything using the ResponseHeaders, it has a CacheControl property and Expires.</p>
+<h2 id="Without-an-External-Server"><a href="#Without-an-External-Server" class="headerlink" title="Without an External Server"></a>Without an External Server</h2><p>If you do not want to use an external server like nginx then AspNet <a href="https://github.com/aspnet/ResponseCaching" target="_blank" rel="external">itself has response caching middelware</a>. The default you get is a memory cache. This may work for you depending on your use case.</p>
+<p>To enable it you basically have to add the following to your Startup.cs file</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">ConfigureServices</span>(<span class="params">IServiceCollection services</span>)</span></div><div class="line">&#123;</div><div class="line">    services.AddResponseCaching();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Configure</span>(<span class="params">IApplicationBuilder app</span>)</span></div><div class="line">&#123;</div><div class="line">    app.UseResponseCaching();</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Running the basic sample in the AspNet github repository and making two requests,</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">HTTP/1.1 200 OK</div><div class="line">Date: Sat, 17 Dec 2016 16:16:32 GMT</div><div class="line">Server: Kestrel</div><div class="line">Cache-Control: public, max-age=10</div><div class="line">Transfer-Encoding: chunked</div><div class="line">Vary: Accept-Encoding</div><div class="line">Vary: Non-Existent</div><div class="line"></div><div class="line">HTTP/1.1 200 OK</div><div class="line">Date: Sat, 17 Dec 2016 16:16:32 GMT</div><div class="line">Content-Length: 32</div><div class="line">Server: Kestrel</div><div class="line">Cache-Control: public, max-age=10</div><div class="line">Age: 5</div><div class="line">Vary: Accept-Encoding</div><div class="line">Vary: Non-Existent</div><div class="line"></div></pre></td></tr></table></figure>
+<p>It’s the Age header that tell us we got caching in place.</p>
+<h1 id="Wrap-up"><a href="#Wrap-up" class="headerlink" title="Wrap-up"></a>Wrap-up</h1><p>That’s all I wanted to mention about caching. I will continue this REST example in future posts.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://blog.codeplayground.org/2016/12/16/Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7/" data-id="ciwrtekhl0000lpaaiiutgzz0" class="article-share-link">Share</a>
+      
+        <a href="http://blog.codeplayground.org/2016/12/16/Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NET-Core/">.NET Core</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/REST/">REST</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-Building-a-basic-REST-AspNet-Core-Example-Part-6" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/" class="article-date">
@@ -94,7 +209,7 @@ ga('send', 'pageview');
 <blockquote>
 <p>The 202 (Accepted) status code indicates that the request has been accepted for processing, but the processing has not been completed. The request might or might not eventually be acted upon, as it might be disallowed when processing actually takes place.</p>
 </blockquote>
-<p>This status code fits well with adding a new file using POST. We could perform a virus scan or do other custom processing before it becomes available. At the time of writing this block AcceptedAtRoute response is only added to the DEV branch of AspNet. So we will do a hack adding it to our solution. Likewise IFormCollection is in a newer version than shown here. So here’s the implementation.</p>
+<p>This status code fits well with adding a new file using POST. We could perform a virus scan or do other custom processing before it becomes available. At the time of writing this post AcceptedAtRoute response is only added to the DEV branch of AspNet at GitHub. So we will do a hack adding it to our solution. Likewise IFormCollection is in a newer version than shown here. So here’s the implementation.</p>
 <figure class="highlight csharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[HttpPost]</div><div class="line"><span class="function"><span class="keyword">public</span> IActionResult <span class="title">Post</span>(<span class="params"></span>)</span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">var</span> file = Request.Form.Files.FirstOrDefault();</div><div class="line">    <span class="keyword">if</span> (file == <span class="literal">null</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> BadRequest();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    File newFile;</div><div class="line">    <span class="keyword">using</span> (<span class="keyword">var</span> stream = <span class="keyword">new</span> MemoryStream())</div><div class="line">    &#123;</div><div class="line">        file.CopyTo(stream);</div><div class="line">        newFile = <span class="keyword">new</span> File(stream.ToArray(), DateTimeOffset.Now, file.ContentType);</div><div class="line">        fileRepository.Create(newFile);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> AcceptedAtRouteResult(<span class="string">"GetFile"</span>, <span class="keyword">new</span> &#123; id = newFile.Id&#125;, <span class="literal">null</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>You should imagine that fileRepository.Create spins off eg. a virus check.</p>
 <h2 id="Retry-After-Header"><a href="#Retry-After-Header" class="headerlink" title="Retry-After Header"></a>Retry-After Header</h2><p>You can read about the Retry-After header <a href="https://tools.ietf.org/html/rfc7231#section-7.1.3" target="_blank" rel="external">in RFC 7231 section 7.1.3</a></p>
@@ -653,7 +768,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">6</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/NET-Core/">.NET Core</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/AspNet-Mvc/">AspNet Mvc</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Azure/">Azure</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/REST/">REST</a><span class="tag-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -671,7 +786,7 @@ ga('send', 'pageview');
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -681,6 +796,10 @@ ga('send', 'pageview');
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2016/12/16/Building-a-basic-REST-AspNet-Core-Example-Caching-Part-7/">Building a basic REST AspNet Core Example: Caching - Part 7</a>
+          </li>
         
           <li>
             <a href="/2016/12/15/Building-a-basic-REST-AspNet-Core-Example-Part-6/">Building a basic REST AspNet Core Example - Part 6</a>
@@ -696,10 +815,6 @@ ga('send', 'pageview');
         
           <li>
             <a href="/2016/12/12/Building-a-basic-REST-aspnet-core-example-Part-3/">Building a basic REST AspNet Core Example - Part 3 </a>
-          </li>
-        
-          <li>
-            <a href="/2016/12/09/Building-a-basic-REST-aspnet-core-example-Part-2/">Building a basic REST AspNet Core Example - Part 2</a>
           </li>
         
       </ul>
